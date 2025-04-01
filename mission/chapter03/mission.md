@@ -21,9 +21,9 @@
 | GET /api/missions | x            | Authorization : accessToken(string) | state=?      | x             |
 
 ## 미션 성공 누르기
-| API EndPoint         | Request Body   | Request Header                      | Query String | Path Variable |
-|----------------------|----------------|-------------------------------------|--------------|---------------|
-| PATCH /api/missions/ | state=complete | Authorization : accessToken(string) | x            | {missionId}   |
+| API EndPoint         | Request Body    | Request Header                      | Query String | Path Variable |
+|----------------------|-----------------|-------------------------------------|--------------|---------------|
+| PATCH /api/missions/ | state: complete | Authorization : accessToken(string) | x            | {missionId}   |
 
 ## 회원 가입 하기
 | API EndPoint                | Request Body                                       | Request Header                     | Query String | Path Variable |
