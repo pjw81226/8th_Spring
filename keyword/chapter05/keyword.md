@@ -13,11 +13,44 @@
     - 위의 Business Domain을 코드로 표현한 부분
 
 ### DDD
-Domain Driven Design
 
-도메인 모델을 중심으로 소프트웨어를 설계하는 방법론
+Domain Driven Design 도메인 중심 설계
 
+말 그대로 “도메인”을 중심에 두고 설계하는 방식
 
+소프트웨어 개발 방법론 중 하나.
+
+처음 백엔드 개발자가 가장 많이 사용하는 방식은 계층형 Architecture
+- (Controller, Service, Domain, Repository)
+
+Domain?
+
+- Domain Layer
+
+- 문제의 영역을 의미, 해결하고자 하는 문제와 관련되어있는 모든 코드들이 모여있는 순수한 영역
+
+4가지의 계층으로 구성됨
+- Presentation - Application - Domain - Infrastructure
+
+각 계층을 건너 띄워선 안되고, 서로의 영역을 침범해서는 안되는 것이 원칙
+
+- Presentation → Controller, DTO, …
+
+- Application → Application Service, DTO ↔ Domain Mapper, …
+
+- Domain → Domain Model, Domain Repository, Domain Service, …
+
+- Infrastructure → Config, Persistence, Security, Util, ….
+
+모든 것은 Domain 으로부터 나온다. Client가 사용할 수 있도록, 데이터를 저장하기 위해 부가기능을 다른 레이어에 추가함으로써 서버의 크기가 커진다.
+
+Domain Layer는 순수한 Java 코드만으로 이루어져야하는 것이 원칙.
+
+왜? Framework의 기술은 버전이 바뀔수록 크게 바뀌고, Deprecated 되는 것이 많다. 외부의 다른 기술에 의존하게 될 경우 핵심 비즈니스 로직 자체가 바뀌는 경우가 있음. 이는 유지보수 비용으로 치환된다.)
+
+하지만, 이런 세세한 원칙을 전부 지키면서 코딩을 하기에는 피로도, 코드량 증가, JPA 와 같은 ORM의 편한 기능 (Dirty Check , Lazy Loading)을 사용하지 못하는 안좋은 점이 존재한다.
+
+어떤 소프트웨어 방법론을 사용하더라도 유동적으로, 융통성있게 사용하는 것이 중요 포인트
 
 ## 양방향 매핑
 
