@@ -78,3 +78,11 @@
     - Mission ↔ User
 
 ![ERD.png](imgs%2FERD.png)
+
+
+### List VS Set
+
+- `List`는 **중복 체크를 하지 않으므로 equals/hashCode에 덜 의존**한다. 아직 PK가 없는 신규 엔티티라도 곧바로 add/remove가 가능하다.
+- `Set`은 add/remove/contains 할 때마다 **`equals`와 `hashCode`를 호출**해 “이미 있는지” 확인한다. PK가 null(미저장)인 상태에서 중복 여부를 판단하려면 business key + 복잡한 equals 로직이 필요하고, 실수하면 삭제가 안 되거나 성능이 급격히 떨어진
+- **HashSet 내부는 hashCode 값으로 버킷을 나누는데**, ‘엔티티 아이디가 생기기 전까지는 hashCode가 거의 일정’해서 모든 요소가 하나의 버킷에 몰린다 → N이 커지면 add/remove 시간이 급등
+- `Set`을 쓰면 **중복을 막아 주지만**, 그 **중복 체크 시점**에 컬렉션 전체를 로딩해야 해서 **Lazy-Loading의 장점을 잃어버리게 된다**—바로 이 순간을 “proxy가 강제로 초기화된다”고 표현한다. Situational 성능·도메인 요구를 보고 List(=bag)와 Set을 선택하자!
