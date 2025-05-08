@@ -185,51 +185,20 @@
 <br>
 - 실습 코드
 
-```java 
-/*StoreRepository*/
-public interface StoreRepository {
-    List<Store> dynamicQueryWithBooleanBuilder(String name, Float score);
-}
-```
+- store repository
+    ![storerepository.png](imgs%2Fstorerepository.png)
 
-```java 
-/*StoreRepositoryImpl*/
-@RequiredArgsConstructor
-@Repository
-public class StoreRepositoryImpl implements StoreRepository {
-    private final JpaStoreRepository jpaStoreRepository;
-    private final JPAQueryFactory jpaQueryFactory;
-    private final QStore store = QStore.store;
+- store repository impl
+    ![storerepositoryimpl.png](imgs%2Fstorerepositoryimpl.png)
 
-    @Override
-    public List<Store> dynamicQueryWithBooleanBuilder(String name, Float score) {
-        BooleanBuilder predicate = new BooleanBuilder();
+- jpa store repository
+    ![jpastorerepository.png](imgs%2Fjpastorerepository.png)
 
-        if (name != null) {
-            predicate.and(store.storeName.eq(name));
-        }
+- store query service
+    ![storequeryservice.png](imgs%2Fstorequeryservice.png)
 
-        if (score != null) {
-            predicate.and(store.score.goe(4.0f));
-        }
-
-        return jpaQueryFactory
-                .selectFrom(store)
-                .where(predicate)
-                .fetch();
-    }
-
-}
-```
-
-```java
-/*JpaStoreRepository*/
-@Repository
-public interface JpaStoreRepository extends JpaRepository<Store, Long> {
-}
-```
-
-
+- store query service impl
+    ![storeserviceimpl.png](imgs%2Fstoreserviceimpl.png)
 
 # 미션기록
 
