@@ -60,11 +60,12 @@ In 절이 당연히 디비 응답속도는 안좋다. 쿼리 실행시 or 로 �
 ![ValidStore.png](imgs%2FValidStore.png)
 ![ValidUser.png](imgs%2FValidUser.png)
 
-한 가지 드는 의문점은, 어차피 Service Layer에서 해당 ID를 통해 DB에 접근하고 그에 맞는 객체를 가져온다.
+한가지 이상한 점이 존재한다.   
+Service Layer에서 해당 ID를 통해 DB에 접근하고 그에 맞는 객체를 가져온다.
 이때 당연하게도 Optional로 가져와서 만약에 존재하지 않는다면 NULL이 들어가고 Optional을 벗기는 과정에서 예외처리를 해주는 것이 일반적이다.
+그렇다면 어차피 Service Layer 에서 존재의 여부를 확인하는데 굳이 이런 Valid를 만들어서 한 번 더 체크해야하는가? 하는 의문점이 생긴다.  
 
-그렇다면 굳이 이런 Valid를 만들어야하는가? 하는 의문점이 생긴다.  
-사실상 두번 체크하는 꼴이 되고 입력으로 받는 엔티티마다 Annotation과 Validator를 전부 만들어줘야 하므로 클래스의 양 역시 많아진다.
+사실상 두 번 체크하는 꼴이 되고 입력으로 받는 엔티티마다 Annotation과 Validator를 전부 만들어줘야 하므로 클래스의 양 역시 많아진다.
 
 내 생각을 말하자면 Valid를 통해 체크를 하기는 하되, 상황에 맞게 Annotation에서 거르는 범위를 설정하는 것이 중요하다. 
 <br>
