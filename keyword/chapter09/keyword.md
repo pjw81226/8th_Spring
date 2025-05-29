@@ -1,3 +1,81 @@
+# AOP를 이용한 Pageable 보정
+
+실무에서 그렇게 많이 쓰이는 방식은 아니다. 하지만 단순하게 “이런 방법도 있구나” 하고 넘어갈만한 부분
+
+Pageable은 Client로부터 받는다. 내부의 값은 음수 페이지, 존재하지 않는 column을 이용한 정렬 등과 같이 예측불가능한 값이 들어올 가능성이 존재한다.
+
+이러한 값들을 Controller에서 일을 처리하기 이전에 AOP와 Around를 이용해서 어느정도 보정이 가능하다.
+
+```java
+    private final ConcurrentMap<Class<?>, Set<String>> validFieldsCache = new ConcurrentHashMap<>();
+
+    @Around("@annotation(pageableConstraint)")
+    public Object pageableValidation(@NonNull ProceedingJoinPoint joinPoint, @NonNull PageableConstraint pageableConstraint) throws Throwable {
+        Object[] args = joinPoint.getArgs();
+        Class<?>[] entityClasses = pageableConstraint.value();
+
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof Pageable pageable) {
+                Sort sort = pageable.getSort();
+
+                int pageNumber = pageable.getPageNumber() <= 0 ? 1 : pageable.getPageNumber();
+
+                // 기본 정렬 조건 설정
+                if (sort.isUnsorted()) {
+                    sort = Sort.by(Sort.Direction.DESC, "id");
+                }
+
+                if (sort.isSorted() && entityClasses.length > 0) {
+                    List<Sort.Order> validOrders = sort.stream()
+                            .filter(order -> isValidOrder(order, entityClasses))
+                            .toList();
+                    args[i] = PageRequest.of(pageNumber - 1, pageable.getPageSize(), Sort.by(validOrders));
+                } else {
+                    args[i] = PageRequest.of(pageNumber - 1, pageable.getPageSize(), sort);
+                }
+            }
+        }
+        return joinPoint.proceed(args);  // 수정된 인자를 전달하고 결과를 반환
+    }
+
+    private boolean isValidOrder(@NonNull Order order,  Class<?> @NonNull [] entityClasses) {
+        String field = order.getProperty();
+        for (Class<?> entityClass : entityClasses) {
+            if (isValidField(entityClass, field)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isValidField(Class<?> entityClass, String field) {
+        Set<String> validFields = validFieldsCache.computeIfAbsent(entityClass, this::getEntityFields);
+        return validFields.contains(field);
+    }
+
+    private @NotNull Set<String> getEntityFields(@NonNull Class<?> entityClass) {
+        Set<String> fields = new HashSet<>();
+        for (Field field : entityClass.getDeclaredFields()) {
+            fields.add(field.getName());
+        }
+        return fields;
+    }
+```
+
+간단하게 작성해본 예시다. 정렬 조건이 설정되어있지 않은경우  primary key를 이용해서 정렬한다.
+
+⇒ 하지만 이부분은 복합키를 primary key로 사용하는 부분도 존재하므로 문제 가능성이 있다.
+
+음수의 페이지 값이 들어오면 강제로 1로 만들어준다.
+
+별다른 처리 없이 음수의 페이지 값이 들어올 경우 500에러가 발생하거나 취약점이 드러날 수 있다.
+
+하지만 실무에서 사용하지 않는 이유가 있다.
+
+체크할 내용이 page, size, sort 범위 제한 뿐인데 프록시까지 쓰면서 해결해야할 부분은 아니기때문.
+
+뿐만아니라  AOP로 예외를 던지면 스택트레이스가 프록시 경유 경로라 처음 보는 개발자가 원인을 추적하기가 까다롭다
+
 # Spring Data JPA의 Paging
 
 대량의 데이터를 테이블 전체 조회 없이 한 번에 n 건만 가져오도록 도와주는 기능.  
