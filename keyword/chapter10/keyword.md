@@ -49,6 +49,11 @@ CSRF(Cross-Site Request Forgery, 사이트 간 요청 위조)는 사용자가 �
   - 필터를 켜 둔 채로 일부 URL만 토큰 검사를 건너뛰려면 `requestMatchers("/webhook/**").permitAll()·csrfTokenRequestHandler(...)` 등 예외 규칙을 계속 추가해야 한다.
 
 
+# CORS
+
+
+
+
 # Spring Security
 Spring Security는 스프링 기반 애플리케이션에 '인증','인가' 기능을 끼워 넣어 주는 보안 프레임워크다.
 
