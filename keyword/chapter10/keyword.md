@@ -1,3 +1,54 @@
+# CSRF
+CSRF(Cross-Site Request Forgery, 사이트 간 요청 위조)는 사용자가 의도하지 않은 HTTP 요청을 공격자가 강제로 전송하도록 만드는 웹 공격 기법
+
+<br>
+
+**공격흐름**
+1. 사용자가 사이트 A(은행)에 로그인 한다.
+2. 사용자가 피싱사이트에 접근한다.
+3. 피싱사이트에 접속시 사이트에 숨어있는 악의적인 스크립트가 실행된다.
+  ```html
+    <img src="https://siteA.com/transfer?amount=1000&to=attacker" />
+  ```
+4. 사용자는 A 사이트에 로그인 되어있기 때문에, session이 유지되고 있으므로 사이트는 해당 요청을 받아들인다.
+5. 사이트 A는 요청을 처리하고, 사용자의 1000원이 공격자의 계좌에 이체된다.
+
+
+<br>
+
+
+**방어**  
+1. JWT Token을 헤더를 통해 전송
+    - http 헤더는 브라우저가 자동으로 붙이지 않고 스크립트(AJAX, fetch)가 명시적으로 설정해야만 전송.
+    - 피싱 페이지는 다른 도메인에서 JS를 실행해도 이 헤더를 만들 수 없음 -> 자연스럽게 CSRF 차단
+2. CAPTCHA
+    - 사용자가 직접 입력해야 하는 CAPTCHA를 추가하여 자동화된 요청을 방지.
+3. SameSite 쿠키 속성
+    - 쿠키에 SameSite 속성을 설정하여, 다른 사이트에서의 요청에는 쿠키가 전송되지 않도록 한다.
+    - `SameSite=Strict` 또는 `SameSite=Lax` 설정을 통해 CSRF 공격을 방지할 수 있다.
+4. CSRF Token
+    - 서버가 요청마다 난수(_csrf)를 세션에 저장 → 클라이언트가 hidden 필드·헤더로 그대로 다시 보내야 통과
+
+
+<br>
+
+**JWT Token Login 구현시, Spring Security에서 비활성화 하는 이유**
+- JWT Token 로그인 시, Session을 사용하지 않고 Stateless 한 구조.
+- 토큰은 클라이언트의 헤더에 저장해서 요청을 날림. 피싱사이트에서 자동으로 요청을 보내도 토큰 헤더 값을 추가할 수 없다.
+- 따라 CSRF 공격이 발생할 수 있는 경로가 없으므로, CSRF 방어를 비활성화해도 된다.
+
+**굳이 왜 끄는거지? 냅두면 안되나..**
+- Session이 다시 생김 
+  - `CsrfFilter`의 기본 저장소는 `HttpSessionCsrfTokenRepository` 필터가 요청을 처리하는 순간 HttpSession이 강제로 생성되어 버림. -> SessionCreationPolicy.STATELESS를 선언해도 “유령 세션”이 생겨 stateless가 아니게 됨.
+- 토큰 없다고 403이 터진다
+  - EST, 모바일 클라이언트, Postman에서 POST/PUT/DELETE 요청을 보내면 CSRF 토큰 헤더가 없어서 403 Forbidden 발생.
+  - 매 호출마다 토큰을 실어 보내도록 모든 클라이언트 코드를 고칠 이유가 없음.
+- 불필요한 필터 = 불필요한 비용
+  - 필터 자체 비용은 작지만, TPS가 높은 API라면 매 요청마다 토큰 로직과 Origin 비교가 들어가는 것보다 깔끔히 빼는 편이 효율적.
+- 예외 설정 지옥 방지
+  - 필터를 켜 둔 채로 일부 URL만 토큰 검사를 건너뛰려면 `requestMatchers("/webhook/**").permitAll()·csrfTokenRequestHandler(...)` 등 예외 규칙을 계속 추가해야 한다.
+
+
 # Spring Security
 Spring Security는 스프링 기반 애플리케이션에 '인증','인가' 기능을 끼워 넣어 주는 보안 프레임워크다.
 
